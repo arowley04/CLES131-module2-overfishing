@@ -14,11 +14,11 @@ library(tidyverse)
 
 ### Use of GitHub
 
-Link to your forked GH repository:
+Link to your forked GH repository:https://github.com/arowley04/CLES131-module2-overfishing
 
 ### Use of Quarto
 
-Link to your .qmd file:
+Link to your .qmd file:https://github.com/arowley04/CLES131-module2-overfishing/blob/main/module2.qmd
 
 ## Overexploitation of global fisheries
 
@@ -33,7 +33,7 @@ We will use data from the [RAM Legacy Stock Assessment Database](https://www.ram
 Use the code below to load up the tables in this database.
 
 ```{r}
-load("data/DBdata[asmt][v4.66].RData")
+load("data/DBdata_asmt_v4.66_.RData")
 ```
 
 The above function loads all 60 tables of this database, which is a lot! So step one of the data science process is exploring the structure of the database and figuring out how the tables are related.
@@ -45,20 +45,73 @@ A selected set of documentation have been provided in `documentation/`. Open up 
 One of the main metadata tables is 'stock':
 
 -   How many stocks are there and how many species do they represent?
+There are 1514 individual stocks, and they represent 398 different species. 
+```{r}
+# number of stocks (rows)
+nrow(stock)
+
+# number of species
+n_distinct(stock$scientificname)
+```
 
 -   What are the top three most common stocks? (Okay to use common names; these are standardized for fish)
+1. Pink salmon n = 170
+2. Sockeye salmon n = 104
+3. Chum salmon n = 99
+```{r}
+stock %>%
+  count(commonname, sort = TRUE) %>%
+  arrange(desc(n = 3)) #get n for every species aranged in descending order
+
+stock %>%
+  count(commonname, sort = TRUE) %>%
+  slice_head(n = 3) #get top 3 n for speciees arranged in descending order
+```
 
 -   In your own words, describe the unit of observation in the 'stock' table and some associated variables that describe it.
+The unit of observation in the 'stock table' is a fish stock, which is a population of a species within a specific geographic region that is managed as one unit typically relating to fisheries. Associated variables that describe each stock include: scientific/common name of fish stock, stock ID, geographic region (areaid) where the stock is found, and the assessment ID(s) used for monitoring fish stock, and state (currrent state of the fish stock).
 
 ### Q2 (1 point)
 
 The next main metadata table is 'assessment':
 
 -   What is the unit of observation in the 'assessment' table? How is this related to the unit of observation in the 'stock' table?
+stock = one row per stock (e.g., “Pacific cod – Gulf of Alaska”).
+assessment = one row per assessment of that stock (e.g., “assessment of Pacific cod – Gulf of Alaska in 2018 using X model”).
 
 -   It seems like 'stockid' and 'assessyear' might uniquely identify each assessment. Is this the case? If not, why not?
+'stockid' and 'assessyear' do not uniquely identify each assessment. There are duplicates of multiple assessments for both. This is likely because some stocks were assessed multiple times in one year, hence 'assessyear' is not unique to 'stockid'. This also explains the need for an 'assessid' variable, which uniquely identifies eeach assessment.
+```{r}
+# unique variables
+assessment %>%
+  count(stockid, assessyear) %>%
+  filter(n > 1)
+
+# unique stockid
+assessment %>%
+  count(stockid) %>%
+  filter(n > 1)
+
+# unique assessyear
+assessment %>%
+  count(assessyear) %>%
+  filter(n > 1)
+
+# unique assessid
+assessment %>% 
+  count(assessid) %>%
+  filter(n > 1)
+```
 
 -   Which variable(s) might you use to join 'stock' and 'assessment'?
+I would join stockid because both 'stock' and 'assessment' have this variable and it is unique, which allows it to be easily joined.
+```{r}
+# join stock to assessments
+stock_assess <- stock %>%
+  left_join(assessment, by = "stockid")
+View(stock_assess)
+```
+
 
 ### Q3 (1 point)
 
