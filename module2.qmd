@@ -288,8 +288,41 @@ cod_ts_with_metrics
 
 Make a timeseries figure for each stock of Atlantic cod. Rather than coloring by the identity of the stock, color by the region it comes from (this may require joining). Use `facet_*()` to plot both metrics in a single code chunk. Connect the points for each stock and focus on the period since 1950. Update until the figure is easily interpretable.
 
-
 -   What happened to Atlantic cod stocks during the period 1950-present? What information does each metric convey?
+
+Total landings (catch):
+Shows human harvest. In many stocks, catches increased until the late 1960s–1980s. After that, the stocks collapsed sharply as overfishing outpaced reproduction.
+
+Spawning Stock Biomass (SSB):
+Shows reproductive population size. Declines mirror or lag the landings collapse. In Canada East Coast, SSB dropped to historic lows by the early 1990s.
+```{r}
+cod_metrics <- c("Total landings", "Spawning Stock Biomass")
+
+cod_ts_plot <- ts_with_metrics %>%
+  filter(stockid %in% atlantic_stockid, #filter for 
+         !is.na(tsvalue),
+         tsyear >= 1950,
+         tslong %in% cod_metrics) %>%
+  left_join(stock %>% select(stockid, region), by = "stockid")
+cod_ts_plot
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(cod_ts_plot, aes(x = tsyear, y = tsvalue, 
+                        group = stockid, color = region)) +
+  geom_line() +
+  facet_wrap(~ tslong, scales = "free_y") +
+  theme_minimal() +
+  labs(
+    title = "Atlantic Cod Stocks Since 1950",
+    x = "Year",
+    y = "Value",
+    color = "Region"
+  )
+```
+
 
 ### Q7 (1 point)
 
