@@ -60,11 +60,11 @@ n_distinct(stock$scientificname)
 3. Chum salmon n = 99
 ```{r}
 stock %>%
-  count(commonname, sort = TRUE) %>%
+  count(commonname, sort = TRUE) |> 
   arrange(desc(n = 3)) #get n for every species aranged in descending order
 
 stock %>%
-  count(commonname, sort = TRUE) %>%
+  count(commonname, sort = TRUE) |> 
   slice_head(n = 3) #get top 3 n for speciees arranged in descending order
 ```
 
@@ -83,23 +83,23 @@ assessment = one row per assessment of that stock (e.g., “assessment of Pacifi
 'stockid' and 'assessyear' do not uniquely identify each assessment. There are duplicates of multiple assessments for both. This is likely because some stocks were assessed multiple times in one year, hence 'assessyear' is not unique to 'stockid'. This also explains the need for an 'assessid' variable, which uniquely identifies eeach assessment.
 ```{r}
 # unique variables
-assessment %>%
-  count(stockid, assessyear) %>%
+assessment |> 
+  count(stockid, assessyear) |> 
   filter(n > 1)
 
 # unique stockid
-assessment %>%
-  count(stockid) %>%
+assessment |> 
+  count(stockid) |> 
   filter(n > 1)
 
 # unique assessyear
-assessment %>%
-  count(assessyear) %>%
+assessment |> 
+  count(assessyear) |> 
   filter(n > 1)
 
 # unique assessid
-assessment %>% 
-  count(assessid) %>%
+assessment |> 
+  count(assessid) |> 
   filter(n > 1)
 ```
 
@@ -171,30 +171,37 @@ taxonomy |>
 ## Identify foreign keys 
 
 # area -> stock
-intersect(colnames(area), colnames(stock)) #should show "areaid"
+intersect(colnames(area), 
+          colnames(stock)) #should show "areaid"
 
 # management -> stock
-intersect(colnames(management), colnames(stock)) #should show "mgmt"
+intersect(colnames(management), 
+          colnames(stock)) #should show "mgmt"
 
 # taxonomy -> stock
-intersect(colnames(taxonomy), colnames(stock)) #should show "taxonid"
+intersect(colnames(taxonomy),
+          colnames(stock)) #should show "taxonid"
 
 # assessmethod -> assessment 
-intersect(colnames(assessmethod), colnames(assessment)) #should show "assessmethodid"
+intersect(colnames(assessmethod), 
+          colnames(assessment)) #should show "assessmethodid"
 
 # assessor -> assessment
-intersect(colnames(assessor), colnames(assessment)) #should show "assessorid"
+intersect(colnames(assessor), 
+          colnames(assessment)) #should show "assessorid"
 ```
 
 ```{r}
 # Example join: add area metadata to stock
 stock %>%
-  left_join(area, by = "areaid") %>%
+  left_join(area, 
+            by = "areaid") |> 
   glimpse()
 
 # Example join: add assessor info to assessment
 assessment %>%
-  left_join(assessor, by = "assessorid") %>%
+  left_join(assessor, 
+            by = "assessorid") |> 
   glimpse()
 ```
 
@@ -202,6 +209,22 @@ assessment %>%
 ### Q4 (1 point)
 
 There are two main data tables described in section C, but their key attributes are difficult to understand. Join the two main data tables with their respective metrics tables (section D):
+
+```{r}
+# Join timeseries with tsmetrics
+ts_with_metrics <- timeseries %>%
+  left_join(tsmetrics, 
+            by = c("tsid" = "tsunique"))
+
+# Join bioparams with its metrics
+bio_with_metrics <- bioparams %>%
+  left_join(bioparamsmetrics, 
+            by = "bioid")
+
+colnames(bioparams)
+colnames(bioparamsmetrics)
+
+```
 
 -   Briefly describe the contents of each joined table.
 
@@ -217,11 +240,48 @@ This database is clearly complex and contains a lot of information. We've grappl
 The collapse of the Atlantic cod fisheries is well documented. Let's see if we can visualize that decline with this database. 
 
 -   How many unique fish stocks comprise "Atlantic cod" and what regions do they come from?
-
+There are 28 unique Altantic cod fish stocks within the database. They come from 4 regions: Canada East Coast, Europe non EU, European Union, and US East Coast. 
+ 
+```{r}
+stock %>%
+  filter(commonname == "Atlantic cod") |>  #filtering for only Atlantic cod
+  distinct(stockid, 
+           region) |> #specifying unique stocks within Atlantic cod by region
+  summarise(
+    n_stocks = n_distinct(stockid), #finding number of distinct Altantic cod stocks by region
+    regions = paste(unique(region), 
+                    collapse = ", ")
+  )
+```
 
 Create a vector of the 'stockid' associated with "Atlantic cod". Then turn your attention to the previously-joined timeseries/tsmetrics table and create a subsetted dataframe with only observations of "Atlantic cod" that have a non-NA value. This table reports many years and many metrics, while we are primarily interested in the years since 1950.
 
 -   Which metrics are most commonly reported for Atlantic cod in this timeframe and what do they mean?
+The top reported metrics are: 
+- Catch / Total Landings - how much cod was taken from the ocean (exploitation).
+- Spawning Stock Biomass (SSB) -the total weight of fish capable of reproducing — a key indicator of stock health.
+- Recruits - young fish entering the population, crucial for recovery.
+- Fishing mortality (F) - the intensity of fishing pressure relative to stock size.
+
+```{r}
+# Create a vector of the 'stockid' associated with "Atlantic cod"
+atlantic_stockid <- stock |> 
+  filter(commonname == "Atlantic cod") |>  #filtering for only Atlantic cod
+  pull(stockid)   #creates vector of stock IDs
+atlantic_stockid
+```
+
+```{r}
+# Create a subsetted dataframe with only observations of "Atlantic cod" that have a non-NA value
+# View(ts_with_metrics)
+
+cod_ts_with_metrics <- ts_with_metrics %>%
+  filter(stockid %in% atlantic_stockid, 
+         !is.na(tsvalue), 
+         tsyear >= 1950) |> 
+  count(tslong, sort = TRUE)
+cod_ts_with_metrics
+```
 
 
 ### Q6 (1 point)
