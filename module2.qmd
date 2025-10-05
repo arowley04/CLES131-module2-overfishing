@@ -275,7 +275,7 @@ atlantic_stockid
 # Create a subsetted dataframe with only observations of "Atlantic cod" that have a non-NA value
 # View(ts_with_metrics)
 
-cod_ts_with_metrics <- ts_with_metrics %>%
+cod_ts_with_metrics <- ts_with_metrics |> 
   filter(stockid %in% atlantic_stockid, 
          !is.na(tsvalue), 
          tsyear >= 1950) |> 
@@ -298,12 +298,13 @@ Shows reproductive population size. Declines mirror or lag the landings collapse
 ```{r}
 cod_metrics <- c("Total landings", "Spawning Stock Biomass")
 
-cod_ts_plot <- ts_with_metrics %>%
+cod_ts_plot <- ts_with_metrics |> 
   filter(stockid %in% atlantic_stockid, #filter for 
          !is.na(tsvalue),
          tsyear >= 1950,
-         tslong %in% cod_metrics) %>%
-  left_join(stock %>% select(stockid, region), by = "stockid")
+         tslong %in% cod_metrics) |> 
+  left_join(stock |> 
+              select(stockid, region), by = "stockid")
 cod_ts_plot
 ```
 
@@ -329,9 +330,35 @@ ggplot(cod_ts_plot, aes(x = tsyear, y = tsvalue,
 We will recreate a slightly more complex version of a figure from the [Millennium Ecosystem Assessment](https://www.millenniumassessment.org/documents/document.356.aspx.pdf) (Fig. 11).
 
 Selecting a metric that can be added across stocks, calculate the total fish landings for each region of Atlantic cod. Make a plot similar to Fig. 11 and color by region.
+```{r}
+cod_landings_region <- cod_ts_plot |> 
+  filter(tslong == "Total landings", #filtering for total landings
+         tsyear >= 1950) |> 
+  group_by(region, tsyear) |> 
+  summarise(total_landings = sum(tsvalue, 
+                                 na.rm = TRUE), 
+            .groups = "drop")
+cod_landings_region
+```
 
+```{r}
+# Plot like Millennium Ecosystem Assessment (Fig. 11 inspo)
+ggplot(cod_landings_region, aes(x = tsyear, 
+                                y = total_landings, 
+                                fill = region)) +
+  geom_area(alpha = 0.8, 
+            linewidth = 0.2, 
+            color = "black") +
+  labs(x = "Year",
+       y = "Total Landings (MT)",
+       fill = "Region") +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "bottom")
+
+```
 
 Which region does Fig. 11 from the MEA correspond to?
+Fig. 11 of the Millennium Ecosystem Assessment (MEA) shows the collapse of the Northwest Atlantic cod fishery. This corresponds to the Canada East Coast region in my database.
 
 ### Q8 (1 point)
 
