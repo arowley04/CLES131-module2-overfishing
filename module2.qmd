@@ -363,6 +363,42 @@ Fig. 11 of the Millennium Ecosystem Assessment (MEA) shows the collapse of the N
 ### Q8 (1 point)
 
 Under the Management Policies section of the [book chapter](https://pressbooks.pub/extinctionstories/chapter/atlantic-cod/), the authors summarize a few major efforts to restore and protect stocks of Atlantic cod. Focusing only on the US and Canada, update your plot from above to include vertical lines to represent the timing of least three major events and label them clearly on your plot. Doing so will likely involve creating a separate dataframe and using it in one of your ggplot layers (one possible argument within `aes()` is `linetype`). Facet the plot by region and update until it is easily interpretable.
+```{r}
+# Key events dataframe
+events <- tibble::tibble(
+  event_year = c(1977, 1992, 2003),
+  event_label = c("200-mile EEZ", "Canada Cod Moratorium", "US Recovery Plan")
+)
+events
+```
+
+```{r}
+ggplot(
+  cod_landings_region |>  
+    filter(region %in% c("Canada East Coast", 
+                         "US East Coast")), 
+  aes(x = tsyear, 
+      y = total_landings, 
+      color = region)
+) +
+  geom_line(linewidth = 1) + #adding vertical lines for events
+  geom_vline(
+    data = events,
+    aes(xintercept = event_year, linetype = event_label),
+    color = "black"
+  ) +
+  labs(
+    x = "Year",
+    y = "Total Landings (MT)",
+    color = "Region",
+    linetype = "Policy Event",
+  ) +
+  facet_wrap(~region, scales = "free_y") +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "bottom")
+
+```
+
 
 ### Q9 (2 points)
 
