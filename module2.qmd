@@ -59,11 +59,13 @@ n_distinct(stock$scientificname)
 2. Sockeye salmon n = 104
 3. Chum salmon n = 99
 ```{r}
-stock %>%
+# Found 2 diff ways to get the same conclusion
+
+stock |> 
   count(commonname, sort = TRUE) |> 
   arrange(desc(n = 3)) #get n for every species aranged in descending order
 
-stock %>%
+stock |> 
   count(commonname, sort = TRUE) |> 
   slice_head(n = 3) #get top 3 n for speciees arranged in descending order
 ```
@@ -106,7 +108,7 @@ assessment |>
 -   Which variable(s) might you use to join 'stock' and 'assessment'?
 I would join stockid because both 'stock' and 'assessment' have this variable and it is unique, which allows it to be easily joined.
 ```{r}
-# join stock to assessments
+# Join stock to assessments
 stock_assess <- stock %>%
   left_join(assessment, by = "stockid")
 View(stock_assess)
@@ -192,13 +194,13 @@ intersect(colnames(assessor),
 ```
 
 ```{r}
-# Example join: add area metadata to stock
+# Exploratory join: add area metadata to stock
 stock %>%
   left_join(area, 
             by = "areaid") |> 
   glimpse()
 
-# Example join: add assessor info to assessment
+# Exploratory join: add assessor info to assessment
 assessment %>%
   left_join(assessor, 
             by = "assessorid") |> 
@@ -212,12 +214,12 @@ There are two main data tables described in section C, but their key attributes 
 
 ```{r}
 # Join timeseries with tsmetrics
-ts_with_metrics <- timeseries %>%
+ts_with_metrics <- timeseries |> 
   left_join(tsmetrics, 
             by = c("tsid" = "tsunique"))
 
 # Join bioparams with its metrics
-bio_with_metrics <- bioparams %>%
+bio_with_metrics <- bioparams |> 
   left_join(bioparamsmetrics, 
             by = "bioid")
 
@@ -296,7 +298,8 @@ Shows human harvest. In many stocks, catches increased until the late 1960s–19
 Spawning Stock Biomass (SSB):
 Shows reproductive population size. Declines mirror or lag the landings collapse. In Canada East Coast, SSB dropped to historic lows by the early 1990s.
 ```{r}
-cod_metrics <- c("Total landings", "Spawning Stock Biomass")
+cod_metrics <- c("Total landings", 
+                 "Spawning Stock Biomass")
 
 cod_ts_plot <- ts_with_metrics |> 
   filter(stockid %in% atlantic_stockid, #filter for 
@@ -304,7 +307,8 @@ cod_ts_plot <- ts_with_metrics |>
          tsyear >= 1950,
          tslong %in% cod_metrics) |> 
   left_join(stock |> 
-              select(stockid, region), by = "stockid")
+              select(stockid, region), 
+            by = "stockid")
 cod_ts_plot
 ```
 
@@ -399,7 +403,18 @@ ggplot(
 
 ```
 
-
 ### Q9 (2 points)
 
 What happened to Atlantic cod stocks for each region following each piece of legislation or management plan, and why do you think this was so? Your multi-paragraph answer should be informed by content from the book chapter; additional sources are optional, and all sources should be cited.
+
+The 1977 establishment of Exclusive Economic Zones (EEZs) gave Canada and the U.S. control over coastal waters (200 nautical miles offshore). This was intended to reduce foreign fishing. However, domestic fleets rapidly expanded, and due to lack of strong fishing regulations/limits, overfishing got worse. Essentially, instead of protecting stocks, EEZs accelerated their decline (Extinction Stories, “Atlantic Cod”).
+
+Canada’s 1992 cod moratorium was one of the most significant events that shut down most commercial fishing after stocks collapsed. Despite landings decreasing to almost zero, cod did not recover as expected. The chapter explains that ecological shifts, such as increases in forage fish and invertebrates, altered the balance of the ecosystem, which hindered cod rebound even though there was lower fishing pressure.
+
+US recovey plans like the 2003 Magnuson-Stevens Act were created to rebuild cod stocks in the Georges Bank and the Gulf of Maine. Although stricter regulations were established, populations remained low due to slow cod reproduction, enforcement challenges, and climate-driven changes in the North Atlantic.
+
+The chapter highlights the importance of regulatory policies before the damage is done. Even though major policies were implemented, they came too late to make significant improvements once the damage was done. Once cod stocks collapsed, ecological feedbacks and environmental stressors prevented large-scale recovery. The Atlantic cod story is a good example of how difficult it is to truly reverse ecosystem collapses and highlights the importance of precautionary fisheries management (Extinction Stories, “Atlantic Cod”).
+
+Works cited:
+Extinction Stories. Atlantic Cod. Pressbooks, https://pressbooks.pub/extinctionstories/chapter/atlantic-cod/
+.
