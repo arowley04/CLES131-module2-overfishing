@@ -217,21 +217,24 @@ There are two main data tables described in section C, but their key attributes 
 ts_with_metrics <- timeseries |> 
   left_join(tsmetrics, 
             by = c("tsid" = "tsunique"))
+ts_with_metrics
 
-# Join bioparams with its metrics
+# Join bioparams with biometrics
 bio_with_metrics <- bioparams |> 
-  left_join(bioparamsmetrics, 
-            by = "bioid")
-
-colnames(bioparams)
-colnames(bioparamsmetrics)
-
+  left_join(biometrics, 
+            by = c("bioid" = "biounique"))
+bio_with_metrics   
 ```
 
 -   Briefly describe the contents of each joined table.
+Combining the timeseries and tsmetrics into a new dataset,"ts_with_metrics", joins the variables tsid (unique time series ID), tsyear (year of the observation), tsvalue (value of the metric ie.catch, exploitation rate, etc.), stockid (stock code), stocklong (full stock name), tscategory / tsshort / tslong (type and description of the time series), and tsunitsshort / tsunitslong (units of measurement) from the timeseries dataset with the assessid (ID for the stock assessment) variable from the tsmetrics dataset.
+
+Combining the bioparms and biometrics into a new dataset, "bio_with_metrics", joins the variables bioid (unique ID for the biological parameter e.g., growth rate, natural mortality), stockid (short stock code), stocklong (full stock name), and bioparam / biounit (type of biological parameter and its units), with the metadata and assessid (stock assessment ID linked to the parameter) from the biomeetrics dataset.
 
 -   What is accomplished by joining these tables?
+Each row in ts_with_metrics has one observation for one stock in one year and has extra metadata from tsmetrics included.
 
+Each row in bio_with_metrics has one biological parameter for one stock and has extra metadata from the biometrics table.
 
 ## Overexploitation of Atlantic cod
 
