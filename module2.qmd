@@ -118,14 +118,86 @@ View(stock_assess)
 In section B of the Database Quick Guide, additional metadata tables are listed in section B. With your data exploration skills, complete the following table:
 
 | B table      | Associated table | join column from B | join column from other |
-|------------------|------------------|------------------|------------------|
-| area         |                  |                    |                        |
-| assessmethod |                  |                    |                        |
-| assessor     |                  |                    |                        |
-| management   |                  |                    |                        |
-| taxonomy     |                  |                    |                        |
+| ------------ | ---------------- | ------------------ | ---------------------- |
+| area         | stock            | areaid             | areaid                 |
+| assessmethod | assessment       | assessmethodid     | assessmethodid         |
+| assessor     | assessment       | assessorid         | assessorid             |
+| management   | stock            | mgmt               | mgmt                   |
+| taxonomy     | stock            | tsn                | tsn                    |
 
 \*Note that assessmethod is not a data.frame, which was perhaps an oversight; consider turning it into one for the ease of using tidyverse functions.
+
+```{r}
+# convert assessmethd into data.frame
+
+assessmethod_df <- as_tibble(assessmethod)
+View(assessmethod_df)
+```
+
+```{r}
+## Identify primary keys
+
+# area
+area |> 
+  count(areaid) |> 
+  filter(n > 1)
+
+# asessmethod
+assessmethod_df |> 
+  count(methodlong) |> 
+  filter(n > 1)
+
+assessmethod_df |> 
+  count(methodshort) |> 
+  filter(n > 1)
+
+# assesor
+assessor |> 
+  count(assessorid) |> 
+  filter(n > 1)
+
+# management
+management |> 
+  count(mgmt) |> 
+  filter(n > 1)
+
+# taxonomy
+taxonomy |> 
+  count(tsn) |> 
+  filter(n > 1)
+```
+
+```{r}
+## Identify foreign keys 
+
+# area -> stock
+intersect(colnames(area), colnames(stock)) #should show "areaid"
+
+# management -> stock
+intersect(colnames(management), colnames(stock)) #should show "mgmt"
+
+# taxonomy -> stock
+intersect(colnames(taxonomy), colnames(stock)) #should show "taxonid"
+
+# assessmethod -> assessment 
+intersect(colnames(assessmethod), colnames(assessment)) #should show "assessmethodid"
+
+# assessor -> assessment
+intersect(colnames(assessor), colnames(assessment)) #should show "assessorid"
+```
+
+```{r}
+# Example join: add area metadata to stock
+stock %>%
+  left_join(area, by = "areaid") %>%
+  glimpse()
+
+# Example join: add assessor info to assessment
+assessment %>%
+  left_join(assessor, by = "assessorid") %>%
+  glimpse()
+```
+
 
 ### Q4 (1 point)
 
