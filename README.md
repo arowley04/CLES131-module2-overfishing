@@ -1,7 +1,9 @@
 # Module 2: Overfishing
 
 ## Team members and contributions
-To be updated
+I (Ana Rowley) am the sole contributor to module 2 - overfishing.
+I completed the assingment by splitting up the questions into 3 days:
+Q1-2 on one day, Q3 on another day, and Q4-9 on the last day 
 
 ## Learning objectives
 
